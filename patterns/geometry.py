@@ -1,22 +1,39 @@
-import shapely
-from rdflib import Graph, URIRef, BNode, Literal, Namespace, IdentifiedNode, XSD
-from rdflib.namespace import GEO, RDF, RDFS, SDO
-from shapely import Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, LinearRing, coords
 from typing import TypeAlias, Literal as TLiteral
 
-ShapelyGeometry: TypeAlias = Point | MultiPoint | LineString | MultiLineString | Polygon | MultiPolygon | LinearRing
+from rdflib import Graph, URIRef, BNode, Literal
+from rdflib.namespace import GEO, RDF, SDO
+from shapely import (
+    Point,
+    MultiPoint,
+    LineString,
+    MultiLineString,
+    Polygon,
+    MultiPolygon,
+    LinearRing,
+    to_geojson
+)
 
-from patterns.rdfpattern import RdfPattern
+ShapelyGeometry: TypeAlias = (
+    Point
+    | MultiPoint
+    | LineString
+    | MultiLineString
+    | Polygon
+    | MultiPolygon
+    | LinearRing
+)
+
+from patterns._pattern import Pattern
 
 
-class Geometry(RdfPattern):
+class Geometry(Pattern):
     def __init__(
-            self,
-            coordinates: ShapelyGeometry,
-            csr: str = "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
-            name: str = None,
-            description: str = None,
-            serialization_type: TLiteral["wkt", "geojson"] = "wkt"
+        self,
+        coordinates: ShapelyGeometry,
+        csr: str = "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
+        name: str = None,
+        description: str = None,
+        serialization_type: TLiteral["wkt", "geojson"] = "wkt",
     ):
         self.coordinates = coordinates
         self.crs = URIRef(csr)
@@ -29,9 +46,24 @@ class Geometry(RdfPattern):
         geom = BNode()
         g.add((geom, RDF.type, GEO.Geometry))
         if self.serialization_type == "geojson":
-            g.add((geom, GEO.asWKT, Literal(shapely.to_geojson(self.coordinates), datatype=GEO.geoJSONLiteral)))
+            g.add(
+                (
+                    geom,
+                    GEO.asWKT,
+                    Literal(
+                        to_geojson(self.coordinates),
+                        datatype=GEO.geoJSONLiteral,
+                    ),
+                )
+            )
         else:
-            g.add((geom, GEO.asWKT, Literal(self.coordinates.wkt, datatype=GEO.wktLiteral)))
+            g.add(
+                (
+                    geom,
+                    GEO.asWKT,
+                    Literal(self.coordinates.wkt, datatype=GEO.wktLiteral),
+                )
+            )
         if self.name is not None:
             g.add((geom, SDO.name, Literal(self.name)))
         if self.description is not None:

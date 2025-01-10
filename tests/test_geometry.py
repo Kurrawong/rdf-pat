@@ -1,4 +1,5 @@
 from shapely.geometry import Point
+
 from patterns.geometry import Geometry
 
 

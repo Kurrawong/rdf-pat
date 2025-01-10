@@ -1,6 +1,7 @@
 from rdflib import Graph, IdentifiedNode
 
-class RdfPattern:
+
+class Pattern:
     node_id: IdentifiedNode
 
     def to_graph(self) -> Graph:
